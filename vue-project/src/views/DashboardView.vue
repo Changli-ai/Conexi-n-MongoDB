@@ -42,23 +42,25 @@
 import { ref, computed, onMounted } from 'vue'
 import axios from 'axios'
 
-// URL de tu API. Para desarrollo local:
-const API_BASE_URL = 'http://localhost:3000/api/cards'
+// 1. ESTA ES LA CLAVE: Usamos una variable de entorno
+// Netlify proveerá este valor.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/cards';
 
 // --- 1. ESTADO (STATE) ---
-const cards = ref([]) // Inicia vacío
+const cards = ref([]) // Inicia vacío, se llenará desde la API
 const searchQuery = ref('')
 const newCardTitle = ref('')
 
 // --- 2. ESTADO COMPUTADO (COMPUTED) ---
 const filteredCards = computed(() => {
+  // ... (El código de computed no cambia) ...
   const query = searchQuery.value.toLowerCase().trim()
   if (!query) {
     return cards.value
   }
   return cards.value.filter(card => {
     const titleMatch = card.title.toLowerCase().includes(query)
-    // CAMBIO AQUÍ: Busca por _id
+    // CAMBIO: MongoDB usa _id (con guion bajo)
     const idMatch = String(card._id).toLowerCase().includes(query)
     return titleMatch || idMatch
   })
@@ -66,11 +68,11 @@ const filteredCards = computed(() => {
 
 // --- 3. MÉTODOS (METHODS) ---
 
-// NUEVA: Función para cargar los cards desde la API
+// NUEVO: Cargar datos desde la API
 async function loadCards() {
   try {
     const response = await axios.get(API_BASE_URL)
-    cards.value = response.data // Carga los cards desde la base de datos
+    cards.value = response.data
   } catch (error) {
     console.error('Error al cargar cards:', error)
   }
@@ -81,7 +83,7 @@ onMounted(() => {
   loadCards()
 })
 
-// Función para AÑADIR un card
+// MODIFICADO: Añadir un card
 async function addCard() {
   const title = newCardTitle.value.trim()
   if (!title) return
@@ -92,35 +94,39 @@ async function addCard() {
   }
 
   try {
+    // Llama a la API para crear
     await axios.post(API_BASE_URL, newCard)
-    newCardTitle.value = '' // Limpia el campo
-    await loadCards() // Recarga la lista desde la BD
+    newCardTitle.value = ''
+    await loadCards() // Recarga la lista
   } catch (error) {
     console.error('Error al añadir card:', error)
   }
 }
 
-// Función para ELIMINAR un card
+// MODIFICADO: Eliminar un card
 async function deleteCard(cardId) {
   if (confirm('¿Estás seguro de que quieres eliminar este card?')) {
     try {
+      // Llama a la API para borrar
       await axios.delete(`${API_BASE_URL}/${cardId}`)
-      await loadCards() // Recarga la lista desde la BD
+      await loadCards() // Recarga la lista
     } catch (error) {
       console.error('Error al eliminar card:', error)
     }
   }
 }
 
-// Función para MODIFICAR un card
+// MODIFICADO: Editar un card
 async function editCard(card) {
   const newTitle = prompt('Introduce el nuevo título:', card.title)
-  const newText = prompt('Introduce el nuevo texto:', card.text)
+  if (!newTitle || newTitle.trim() === '') return
 
-  if (!newTitle || !newText) return // No hacer nada si cancela
+  const newText = prompt('Introduce el nuevo texto:', card.text)
+  if (newText === null) return // Permite texto vacío si el usuario da "Aceptar"
 
   try {
-    await axios.put(`${API_BASE_URL}/${card.id}`, {
+    // Llama a la API para actualizar
+    await axios.put(`${API_BASE_URL}/${card._id}`, {
       title: newTitle.trim(),
       text: newText.trim()
     })
