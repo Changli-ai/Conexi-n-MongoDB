@@ -1,42 +1,79 @@
 <template>
   <v-container>
-    <v-row class="mb-4">
-      <v-col
-  v-for="card in filteredCards"
-  :key="card._id" 
-  cols="12"
-  md="6"
->
-  <v-card class="mx-auto" elevation="4">
-    <v-card-item>
-      <v-card-title>
-        {{ card.title }}
-      </v-card-title>
-      <v-card-subtitle>
-        ID: {{ card._id }} </v-card-subtitle>
-    </v-card-item>
 
-    <v-card-actions>
-      <v-spacer></v-spacer>
-      <v-btn
-        color="blue"
-        icon="mdi-pencil"
-        variant="text"
-        @click="editCard(card)" 
-        title="Modificar"
-      ></v-btn>
-      <v-btn
-        color="red"
-        icon="mdi-delete"
-        variant="text"
-        @click="deleteCard(card._id)" title="Eliminar"
-      ></v-btn>
-    </v-card-actions>
-  </v-card>
-</v-col>
-</v-row>
-</v-container>
-</template> 
+    <v-row class="mb-4">
+      <v-col cols="12" md="6">
+        <v-text-field
+          v-model="newCardTitle"
+          label="Añadir nuevo card"
+          variant="solo"
+          append-inner-icon="mdi-plus"
+          @keydown.enter="addCard"
+          @click:append-inner="addCard"
+          hide-details
+        ></v-text-field>
+      </v-col>
+
+      <v-col cols="12" md="6">
+        <v-text-field
+          v-model="searchQuery"
+          label="Buscar por título o ID"
+          variant="solo"
+          prepend-inner-icon="mdi-magnify"
+          clearable
+          hide-details
+        ></v-text-field>
+      </v-col>
+    </v-row>
+    <v-row>
+      <v-col
+        v-for="card in filteredCards"
+        :key="card._id" 
+        cols="12"
+        md="6"
+      >
+        <v-card class="mx-auto" elevation="4">
+          <v-card-item>
+            <v-card-title>
+              {{ card.title }}
+            </v-card-title>
+            <v-card-subtitle>
+              ID: {{ card._id }}
+            </v-card-subtitle>
+            <v-card-text v-if="card.text">{{ card.text }}</v-card-text>
+          </v-card-item>
+
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              color="blue"
+              icon="mdi-pencil"
+              variant="text"
+              @click="editCard(card)" 
+              title="Modificar"
+            ></v-btn>
+            <v-btn
+              color="red"
+              icon="mdi-delete"
+              variant="text"
+              @click="deleteCard(card._id)" title="Eliminar"
+            ></v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+
+      <v-col v-if="filteredCards.length === 0" cols="12">
+        <v-card flat class="text-center pa-5">
+          <v-icon size="50" color="grey-lighten-1">mdi-note-multiple-outline</v-icon>
+          <v-card-text class="text-grey-lighten-1">
+            No hay cards para mostrar. ¡Añade uno nuevo!
+          </v-card-text>
+        </v-card>
+      </v-col>
+
+    </v-row>
+  </v-container>
+</template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
